@@ -6,7 +6,7 @@
 system. The plugin creates a new JIRA Issue for Alerts triggered by dynaTrace and includes detailed information about the Incident in the created JIRA Ticket.
 
 This plugin is a showcase plugin to better understand how to build custom action plugins for dynaTrace.  
-A detailed [Step-By-Step Guide explains how to build a plugin like this](https://community/display/DOCDT42/Developing+a+User+Plugin). The implementation of this plugin can easily be changed to create
+A detailed [Step-By-Step Guide explains how to build a plugin like this](https://community.compuwareapm.com/community/display/DOCDT42/Developing+a+User+Plugin). The implementation of this plugin can easily be changed to create
 tickets in other ticketing systems such as Bugzilla, Trac, etc.
 
 ## Plugin Details
@@ -20,9 +20,9 @@ tickets in other ticketing systems such as Bugzilla, Trac, etc.
 | License | [dynaTrace BSD](dynaTraceBSD.txt)
 | Support | [Not Supported](https://community.compuwareapm.com/community/display/DL/Support+Levels)
 | Release History | 2010-04-27 Initial Release
-| Download | [JIRA Action Plugin](attachments_53411883_1_JIRA__Create_Issue_Action_Plugin.jar)  
-| | [JIRA Action Plugin for JIRA 5.2](attachments_100237333_1_com.dynatrace.diagnostics.jira.CreateIssueActionPlugin_0.0.4.jar)  
-| | [JIRA Action Plugin for JIRA 6](attachments_170952485_1_com.dynatrace.diagnostics.jira.CreateIssueActionPlugin_0.0.9.jar)
+| Download | [JIRA Action Plugin](JIRA__Create_Issue_Action_Plugin.jar)  
+| | [JIRA Action Plugin for JIRA 5.2](com.dynatrace.diagnostics.jira.CreateIssueActionPlugin_0.0.4.jar)  
+| | [JIRA Action Plugin for JIRA 6](com.dynatrace.diagnostics.jira.CreateIssueActionPlugin_0.0.9.jar)
 
 ## JIRA 5.2 Integration Explained
 
