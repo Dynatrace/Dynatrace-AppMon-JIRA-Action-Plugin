@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<!-- plugin.xml file written by dynaTrace Client 3.2.0 -->
+<plugin>
+  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin" name="JIRA - Create Issue Action Plugin">
+    <information>
+      <category value="" />
+      <description value="Action plugin to create a new issue in JIRA" />
+    </information>
+    <configuration>
+      <property key="jira_url" label="JIRA URL" type="string" description="The JIRA URL for creating a new issue" default="http://linzservvm.dynatrace.local:8080/jira" />
+      <property key="jira_username" label="JIRA Username" type="string" description="The JIRA username" default="" />
+      <property key="jira_password" label="JIRA Password" type="password" description="The JIRA password" default="" />
+      <property key="jira_projectId" label="JIRA Project ID" type="string" description="The ID (not the name) of the JIRA project for the new issue" default="" />
+      <property key="jira_issueTypeId" label="JIRA Issue Type ID" type="string" description="The ID (not the name) of the JIRA issue type for the new issue" default="" />
+      <property key="jira_componentId" label="JIRA Component ID" type="string" description="The ID (not the name) of the JIRA component for the new issue" default="" />
+      <property key="jira_priorityId" label="JIRA Priority" type="string" description="The priority for the new issue" default="" />
+      <property key="jira_reporter" label="JIRA Reporter" type="string" description="The reporter for the new issue" default="" />
+      <property key="jira_assignee" label="JIRA Assignee" type="string" description="The assignee for the new issue (will be defaulted to the reporter if missing)" default="" />
+      <property key="jira_version" label="JIRA Version" type="string" description="The version for the new issue" default="" />
+    </configuration>
+  </extension>
+  <extension point="com.dynatrace.diagnostics.pdk.action" id="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin.action" name="JIRA - Create Issue">
+    <plugin configid="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin" class="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin" />
+  </extension>
+</plugin>
+
