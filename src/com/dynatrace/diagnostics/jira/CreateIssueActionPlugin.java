@@ -43,9 +43,11 @@ public class CreateIssueActionPlugin implements Action {
 	}
 	
 	@Override
+	//Initialize fields 
 	public Status execute(ActionEnvironment env) throws Exception {
-		log.info("Executing JIRA - Create Issue Action Plugin");
+		log.info("----------------------Executing JIRA - Create Issue Action Plugin-----------------------------");
 
+		String data = env.getConfigString("jira_properties");
 		String jiraUrl = env.getConfigString("jira_url");
 		String jiraUsername = env.getConfigString("jira_username");
 		String jiraPassword = env.getConfigPassword("jira_password");
@@ -53,24 +55,23 @@ public class CreateIssueActionPlugin implements Action {
 		String jiraIssueTypeId = env.getConfigString("jira_issueTypeId");
 		String jiraComponentId = env.getConfigString("jira_componentId");
 		String jiraPriorityId = env.getConfigString("jira_priorityId");
-		String jiraReporter = env.getConfigString("jira_reporter");
-		String jiraAssignee = env.getConfigString("jira_assignee");
+		String jiraReporter = env.getConfigString("jira_reporter"); 
+		String jiraAssignee = env.getConfigString("jira_assignee");  
 		String jiraVersion = env.getConfigString("jira_version");
-        String jiraProjectName = env.getConfigString("jira_projectName");
+        String jiraProjectName = env.getConfigString("jira_projectName");  
+        String jiraLabel = env.getConfigString("jira_label");
+        
+        log.info("Parameters are: data= " + data + ", jiraURL= " + jiraUrl + ", jiraUsername= " + jiraUsername + ", jiraPassword= *******, jiraProjectId= " + jiraProjectId + 
+        		", jiraIssueTypeId= " + jiraIssueTypeId + ", jiraComponentId= " + jiraComponentId + ", jiraPriorityId= " + jiraPriorityId + ", jiraReporter= " + jiraReporter +
+        		", jiraAssignee= " + jiraAssignee + ", jiraVersion= " + jiraVersion + ", jiraProjectName= " + jiraProjectName + ", jiraLabel =" + jiraLabel);
+       
 		
-/* Commented by rjain -- Is Reporter is not part of the JIRA as Assignee this doesn't work. 
-		if (jiraAssignee==null || jiraAssignee.isEmpty()) {
-			// Default the assignee to the reporter
-			jiraAssignee=jiraReporter;
-		}
-*/
-
 		
 		if (jiraUrl==null || jiraUsername==null || jiraPassword==null || jiraProjectId==null || 
 				jiraIssueTypeId==null || jiraReporter==null || jiraUrl.isEmpty() || 
 				jiraUsername.isEmpty() || jiraPassword.isEmpty() || jiraProjectId.isEmpty() || 
 				jiraIssueTypeId.isEmpty() || jiraReporter.isEmpty()) {
-			log.severe("Required parameters to create issue in JIRA not present");
+			log.severe("Message=\"Required parameters to create issue in JIRA not present\"");
 			// For easier testing the plugin will continue even without all its required parameters
 			// return new Status(Status.StatusCode.ErrorInternalConfigurationProblem);
 		}
@@ -80,54 +81,46 @@ public class CreateIssueActionPlugin implements Action {
 			jiraUrl+="/";
 		}
 		
-		log.info("Number of incidents to handle: "+env.getIncidents().size());
+		log.info("number_of_incidents= "+env.getIncidents().size());
 		
 		for (Incident i : env.getIncidents()) {
 			final StringBuilder desc = new StringBuilder();
-		    appendln(desc, "Incident Details");
-		    appendln(desc, "  Severity: ", getSeverityAsString(i));
-		    appendln(desc, "  Start Time: ", i.getStartTime().toString());
-		    appendln(desc, "  End Time: ", i.getEndTime().toString());
-		    appendln(desc, "  Duration: ", i.getDuration().toString());
-		    appendln(desc, "  Status: ", i.isClosed() ? "Closed" : "Open");
-		    appendln(desc, "  Server: ", i.getServerName());
+			appendln(desc,  "*Beschreibung*");
+			appendln(desc, "\\n ",i.getIncidentRule().getDescription());
+		    appendln(desc, " \\n||Details|| ||");
+		    appendln(desc, " \\n|Severity| ", getSeverityAsString(i),"|");
+		    appendln(desc, " \\n|Startzeit| ", i.getStartTime().toString(),"|");
+		    appendln(desc, " \\n|Endzeit| ", i.getEndTime().toString(),"|");
+		    appendln(desc, " \\n|Dauer| ", i.getDuration().toString(),"|");
+		    appendln(desc, " \\n|Status| ", i.isClosed() ? "Closed" : "Open","|");
+		    appendln(desc, " \\n|Server| ", i.getServerName(),"|");
 		
-		    appendln(desc, "Incident Rule");
-		    appendln(desc, "  Name: ", i.getIncidentRule().getName());
-		    appendln(desc, "  Description: ", i.getIncidentRule().getDescription());
-		    appendln(desc, "  Conditions: " + i.getIncidentRule().getCondition());	
+		    appendln(desc, "\\n||Incident Rule|| ||");
+		    appendln(desc, "  \\n|Name | ", i.getIncidentRule().getName(), "|");
+		    appendln(desc, "  \\n|Auslösende Bedingung | " + i.getIncidentRule().getCondition(),"|");	
 		    
 		    if (!i.getViolations().isEmpty()) {
-			    appendln(desc, "Violations");
+			    appendln(desc, "\\n||Violations|| ||");
 			    for (Violation v : i.getViolations()) {
-			        appendln(desc, "  ", v.getViolatedMeasure().getName());
-			        appendln(desc, "    Description: ", v.getViolatedMeasure().getDescription());
-			        appendln(desc, "    Source: ", v.getViolatedMeasure().getSource().toString());
-			        appendln(desc, "    Upper Severe: ", v.getViolatedMeasure().getUpperSevere().getValue().toString());
-			        appendln(desc, "    Upper Warning: ", v.getViolatedMeasure().getUpperWarning().getValue().toString());
-			        appendln(desc, "    Lower Warning: ", v.getViolatedMeasure().getLowerWarning().getValue().toString());
-			        appendln(desc, "    Lower Severe: ", v.getViolatedMeasure().getLowerSevere().getValue().toString());
-			        appendTriggerValues(v, desc);
-			    }
-			}
-
-			if (!i.getPurePaths().isEmpty()) {
-			    appendln(desc, "PurePaths");
-			    for (PurePath path : i.getPurePaths()) {
-			        appendln(desc, "- ", path.toString());
+			        appendln(desc, " \\n|   Messwert|", v.getViolatedMeasure().getName(),"|");			      
+			        appendln(desc, " \\n|   Betroffener Server| ", v.getViolatedMeasure().getSource().toString(),"|");
+			        appendln(desc, " \\n|   Schwellwert Critical| ", v.getViolatedMeasure().getUpperSevere().getValue().toString(),"|");
+			        appendln(desc, " \\n|   Schwellwert Warning| ", v.getViolatedMeasure().getUpperWarning().getValue().toString(),"|");			        
+			        appendTriggerValues(v, desc);			        
 			    }
 			}
 			
-			log.info("Description: "+desc.toString());
+			//log.info("Description: "+desc.toString());
+			String summary = i.getIncidentRule().getName();
 
 			if (jiraUrl!=null && !jiraUrl.isEmpty()) {
 				try {
-					return createJiraIssue(jiraUrl, jiraUsername, jiraPassword, jiraProjectId,
+					return createJiraIssue(data, jiraUrl, jiraUsername, jiraPassword, jiraProjectId,
 							jiraIssueTypeId, jiraComponentId, jiraPriorityId, jiraVersion, jiraReporter,
-							jiraAssignee,jiraProjectName, i.getMessage(),desc.toString());
+							jiraAssignee,summary,desc.toString(), jiraLabel);
 				}
 				catch (IOException e) { 
-					log.severe("Exception while raising issue in JIRA: "+e);
+					log.severe("Exception while raising issue in JIRA: Exception="+e);
 					return new Status(Status.StatusCode.ErrorInfrastructure);
 				}
 			}
@@ -138,101 +131,24 @@ public class CreateIssueActionPlugin implements Action {
 	public void teardown(ActionEnvironment env) throws Exception {
 	}
 	
-	private Status createJiraIssue(String jiraUrl, String jiraUsername, String jiraPassword, String jiraProjectId, 
+	private Status createJiraIssue(String data, String jiraUrl, String jiraUsername, String jiraPassword, String jiraProjectId, 
 			String jiraIssueTypeId, String jiraComponentId, String jiraPriorityId, String jiraVersion, 
-			String jiraReporter, String jiraAssignee, String jiraProjectName, String summary, String description) throws IOException {
+			String jiraReporter, String jiraAssignee, String summary, String description, String jiraLabel) throws IOException {
+		
+		
 		// Assemble JIRA URL
-		final StringBuilder urlBuilder = new StringBuilder();
+		jiraUrl = jiraUrl + "rest/api/2/issue/";		
+		log.info("URL=" + jiraUrl);
+		
+		PropertiesWriter aProp = new PropertiesWriter(summary, description, data, jiraProjectId, jiraIssueTypeId, jiraLabel); //use constructors
+		JIRACurl aCurl = new JIRACurl(data, jiraUsername, jiraPassword, jiraUrl);
+		 
+		//create the json-data for the curl
+		aProp.writeProperties();
+		//start the curl via Rest-API
+		aCurl.createTicket();		
 
-		log.info("Used JIRA Here Issuetype: "+jiraIssueTypeId);
-		log.info("Used JIRA Assignee Start: "+jiraAssignee);
-
-
-		urlBuilder.append(jiraUrl);
-		urlBuilder.append("CreateIssueDetails.jspa?pid=");
-		urlBuilder.append(jiraProjectId);
-		urlBuilder.append("&issuetype=");
-		urlBuilder.append(jiraIssueTypeId);
-		if (jiraPriorityId!=null && !jiraPriorityId.isEmpty()) {
-			urlBuilder.append("&priority=");
-			urlBuilder.append(jiraPriorityId);
-		}
-		urlBuilder.append("&summary=");
-		urlBuilder.append(URLEncoder.encode(summary, "UTF-8"));
-		urlBuilder.append("&description=");
-		urlBuilder.append(URLEncoder.encode(description, "UTF-8"));
-		/* Added by rjain -- use the Project Name to verify the Versions --- */ 
-		if (jiraProjectName !=null && !jiraProjectName.isEmpty()) { 
-		    if (jiraVersion!=null && !jiraVersion.isEmpty()) {
-				// Try to find the version ID that belongs to the given version string
-				final Map<String, String> jiraVersions = getJIRAVersions(jiraUrl,jiraProjectId, jiraProjectName,jiraUsername,jiraPassword);
-				final String versionID = jiraVersions.get(jiraVersion);
-				if (versionID != null) {
-					urlBuilder.append("&versions=");
-					urlBuilder.append(URLEncoder.encode(versionID, "UTF-8"));
-				} else {
-					log.warning("Found no match for version '"+jiraVersion+"' in JIRA");
-				}
-			}
-		}
-		urlBuilder.append("&reporter=");
-		urlBuilder.append(jiraReporter);
-
-		/* Added by rjain -- if the assignee is mandatory and is provided, add it to the Create Issue */ 
-		
-		if (jiraAssignee!=null && !jiraAssignee.isEmpty()) {
-			urlBuilder.append("&assignee=");
-			urlBuilder.append(jiraAssignee);		
-		}
-		
-		if (jiraComponentId!=null && !jiraComponentId.isEmpty()) {
-			urlBuilder.append("&components=");
-			urlBuilder.append(jiraComponentId);
-		}
-		urlBuilder.append("&os_username=");
-		urlBuilder.append(jiraUsername);
-		urlBuilder.append("&os_password=");
-		urlBuilder.append(URLEncoder.encode(jiraPassword, "UTF-8"));
-
-		/* Added by rjain -- added the xsrfToken at then end. Refer to JIRA documenation */ 
-		urlBuilder.append("&atl_token=");
-		urlBuilder.append(URLEncoder.encode("<webwork:property value='xsrfToken'/>", "UTF-8"));
-		
-		
-		// Open assembled JIRA URL
-		final URL jiraURL = new URL(urlBuilder.toString());
-		log.info("Used JIRA URL is: "+jiraURL);
-		
-		final URLConnection connection = jiraURL.openConnection();
-		/* Added by rjain -- added the Request Header to tell JIRA not to check Token. Refer to JIRA documenation */ 
-		connection.setRequestProperty("X-Atlassian-Token", "no-check");
-
-		if(connection instanceof HttpsURLConnection) {
-			((HttpsURLConnection)connection).setSSLSocketFactory(createSSLSocketFactory());
-			((HttpsURLConnection)connection).setHostnameVerifier(new EmptyHostnameVerifier());
-		}
-		connection.getContent();
-		
-		// Check response from JIRA to see if issue was created successfully
-		final String targetURL = connection.getURL().toString();
-		log.info("Response URL from JIRA is: "+targetURL);
-		
-		/* Added by rjain -- the target URL can also contain HTML Chars hence the check */ 		
-		if (targetURL.contains("/browse/") || (targetURL.contains("%2Fbrowse%2F"))) {			
-			String ticketNumber = "Blank";
-			if (targetURL.contains("%2Fbrowse%2F")) {
-				ticketNumber = targetURL.substring(targetURL.lastIndexOf("%2F") + 3); 
-			}
-			else if (targetURL.contains("/browse/")) {
-				ticketNumber = targetURL.substring(targetURL.lastIndexOf('/') + 1);
-			}
-			log.info("Successfully created JIRA issue with the following number: "+ticketNumber);
-		}
-		else {
-			log.severe("Unknown problem while raising issue in JIRA" + Status.StatusCode.ErrorInfrastructure);
-			return new Status(Status.StatusCode.ErrorInfrastructure);
-		}
-		return new Status(Status.StatusCode.Success);
+	return new Status(Status.StatusCode.Success);
 	}
 	
 	private String getSeverityAsString(Incident incident) {
@@ -263,88 +179,25 @@ public class CreateIssueActionPlugin implements Action {
 	    Collection<Violation.TriggerValue> triggerValues = violation.getTriggerValues();
 	
 	    if (!triggerValues.isEmpty()) {
-	        sb.append("    Trigger Values:\n");
+	        //sb.append("   \\n |Auslösender Messwert| |\n");
 	        for (Violation.TriggerValue triggerValue : triggerValues) {
-	        	append(sb,"      ",triggerValue.getSource().toString(),": ",triggerValue.getValue().toString());
+	        	append(sb,"  \\n|    ",triggerValue.getSource().toString(),": ",triggerValue.getValue().toString(),"|");
 	            double v = triggerValue.getValue().getValue();
 	            double t = violation.getViolatedThreshold().getValue().getValue();
 	            double dif = Math.abs(v - t);
 	            if (dif != 0) {
 	            	append(sb," (",BaseConstants.FORMAT_INTERNAL_DECIMAL.format(dif),violation.getViolatedMeasure().getUnit());
-	    		    append(sb, v < t ? " below threshold" : " above threshold",")");
+	    		    append(sb, v < t ? " unter Schwellwert" : " über Schwellwert",")");
 	            }
 	        }
-	        sb.append("\n");
 	    }
-	}	
+	}		
 	
-	private static final String TD_NOWRAP_A_ID_VERSION = "<td nowrap><a id=\"version_";
+	private static final String TD_NOWRAP_A_ID_VERSION = "<td nowrap><a id=\"version_";		
 	
-	private static Map<String, String> getJIRAVersions(final String url, final String jiraProjectId, final String jiraProjectName, final String username,
-			final String password) throws MalformedURLException,
-			IOException {
-		createSSLSocketFactory();
-		String versionURL = url.substring(0,url.lastIndexOf("secure")); 
-		
-		versionURL = versionURL+"browse/"+jiraProjectName+"?report=com.atlassian.jira.plugin.system.project:versions-panel&subset=-1&os_username=" +
-				username + "&os_password=" + password; 
-		
-		log.info("Used JIRA Version URL is: "+versionURL);
-		
-		final URLConnection connection = new URL(versionURL).openConnection();
-		if(connection instanceof HttpsURLConnection) {
-			((HttpsURLConnection)connection).setSSLSocketFactory(createSSLSocketFactory());
-			((HttpsURLConnection)connection).setHostnameVerifier(new EmptyHostnameVerifier());
-		}
-		final HashMap<String, String> versions = new HashMap<String, String>();
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-		try {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				final int index = line.indexOf(TD_NOWRAP_A_ID_VERSION+jiraProjectId);
-				if (index != -1) {
-					final String versionID = line.substring(index + TD_NOWRAP_A_ID_VERSION.length(), index +
-							TD_NOWRAP_A_ID_VERSION.length() + 5);
-					final int summaryIndex = line.indexOf('>', index + TD_NOWRAP_A_ID_VERSION.length());
-					final int versionEndIndex = line.indexOf('<', summaryIndex);
-					final String versionName = line.substring(summaryIndex + 1, versionEndIndex);
-					versions.put(versionName, versionID);
-				}
-			}
-		} finally {
-			reader.close();
-		}
-		return versions;
-	}	
-	
-	private static SSLSocketFactory createSSLSocketFactory() throws IOException {
-		final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			public void checkClientTrusted(final X509Certificate[] certs, final String authType) {
-			}
-
-			public void checkServerTrusted(final X509Certificate[] certs, final String authType) {
-			}
-		} };
-
-		try {
-			final SSLContext sc = SSLContext.getInstance("SSL");
-			sc.init(null, trustAllCerts, new java.security.SecureRandom());
-			return sc.getSocketFactory();
-		} catch (final KeyManagementException e) {
-			throw new IOException(e);
-		} catch (final NoSuchAlgorithmException e) {
-			throw new IOException(e);
-		}
-	}
-	
-	private static class EmptyHostnameVerifier implements HostnameVerifier {
-		@Override
-		public boolean verify(final String paramString, final SSLSession paramSSLSession) {
-			return true;
-		}
-	}
 }
+
+	
+		
+		
+		

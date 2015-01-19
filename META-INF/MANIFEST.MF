@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Require-Bundle: com.dynatrace.diagnostics.sdk
 Bundle-Vendor: dynaTrace
 Bundle-ClassPath: .,lib/com.dynatrace.diagnostics.sdk.jar
-Bundle-Version: 0.0.4
+Bundle-Version: 0.0.9
 Bundle-Name: JIRA - Create Issue Action Plugin
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: com.dynatrace.diagnostics.jira.CreateIssueActionP
