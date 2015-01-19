@@ -56,11 +56,15 @@ public class CreateIssueActionPlugin implements Action {
 		String jiraReporter = env.getConfigString("jira_reporter");
 		String jiraAssignee = env.getConfigString("jira_assignee");
 		String jiraVersion = env.getConfigString("jira_version");
+        String jiraProjectName = env.getConfigString("jira_projectName");
 		
+/* Commented by rjain -- Is Reporter is not part of the JIRA as Assignee this doesn't work. 
 		if (jiraAssignee==null || jiraAssignee.isEmpty()) {
 			// Default the assignee to the reporter
 			jiraAssignee=jiraReporter;
 		}
+*/
+
 		
 		if (jiraUrl==null || jiraUsername==null || jiraPassword==null || jiraProjectId==null || 
 				jiraIssueTypeId==null || jiraReporter==null || jiraUrl.isEmpty() || 
@@ -115,12 +119,12 @@ public class CreateIssueActionPlugin implements Action {
 			}
 			
 			log.info("Description: "+desc.toString());
-		
+
 			if (jiraUrl!=null && !jiraUrl.isEmpty()) {
 				try {
 					return createJiraIssue(jiraUrl, jiraUsername, jiraPassword, jiraProjectId,
 							jiraIssueTypeId, jiraComponentId, jiraPriorityId, jiraVersion, jiraReporter,
-							jiraAssignee,i.getMessage(),desc.toString());
+							jiraAssignee,jiraProjectName, i.getMessage(),desc.toString());
 				}
 				catch (IOException e) { 
 					log.severe("Exception while raising issue in JIRA: "+e);
@@ -136,9 +140,14 @@ public class CreateIssueActionPlugin implements Action {
 	
 	private Status createJiraIssue(String jiraUrl, String jiraUsername, String jiraPassword, String jiraProjectId, 
 			String jiraIssueTypeId, String jiraComponentId, String jiraPriorityId, String jiraVersion, 
-			String jiraReporter, String jiraAssignee, String summary, String description) throws IOException {
+			String jiraReporter, String jiraAssignee, String jiraProjectName, String summary, String description) throws IOException {
 		// Assemble JIRA URL
 		final StringBuilder urlBuilder = new StringBuilder();
+
+		log.info("Used JIRA Here Issuetype: "+jiraIssueTypeId);
+		log.info("Used JIRA Assignee Start: "+jiraAssignee);
+
+
 		urlBuilder.append(jiraUrl);
 		urlBuilder.append("CreateIssueDetails.jspa?pid=");
 		urlBuilder.append(jiraProjectId);
@@ -152,19 +161,30 @@ public class CreateIssueActionPlugin implements Action {
 		urlBuilder.append(URLEncoder.encode(summary, "UTF-8"));
 		urlBuilder.append("&description=");
 		urlBuilder.append(URLEncoder.encode(description, "UTF-8"));
-		if (jiraVersion!=null && !jiraVersion.isEmpty()) {
-			// Try to find the version ID that belongs to the given version string
-			final Map<String, String> jiraVersions = getJIRAVersions(jiraUrl,jiraUsername,jiraPassword);
-			final String versionID = jiraVersions.get(jiraVersion);
-			if (versionID != null) {
-				urlBuilder.append("&versions=");
-				urlBuilder.append(URLEncoder.encode(versionID, "UTF-8"));
-			} else {
-				log.warning("Found no match for version '"+jiraVersion+"' in JIRA");
+		/* Added by rjain -- use the Project Name to verify the Versions --- */ 
+		if (jiraProjectName !=null && !jiraProjectName.isEmpty()) { 
+		    if (jiraVersion!=null && !jiraVersion.isEmpty()) {
+				// Try to find the version ID that belongs to the given version string
+				final Map<String, String> jiraVersions = getJIRAVersions(jiraUrl,jiraProjectId, jiraProjectName,jiraUsername,jiraPassword);
+				final String versionID = jiraVersions.get(jiraVersion);
+				if (versionID != null) {
+					urlBuilder.append("&versions=");
+					urlBuilder.append(URLEncoder.encode(versionID, "UTF-8"));
+				} else {
+					log.warning("Found no match for version '"+jiraVersion+"' in JIRA");
+				}
 			}
 		}
 		urlBuilder.append("&reporter=");
 		urlBuilder.append(jiraReporter);
+
+		/* Added by rjain -- if the assignee is mandatory and is provided, add it to the Create Issue */ 
+		
+		if (jiraAssignee!=null && !jiraAssignee.isEmpty()) {
+			urlBuilder.append("&assignee=");
+			urlBuilder.append(jiraAssignee);		
+		}
+		
 		if (jiraComponentId!=null && !jiraComponentId.isEmpty()) {
 			urlBuilder.append("&components=");
 			urlBuilder.append(jiraComponentId);
@@ -174,11 +194,19 @@ public class CreateIssueActionPlugin implements Action {
 		urlBuilder.append("&os_password=");
 		urlBuilder.append(URLEncoder.encode(jiraPassword, "UTF-8"));
 
+		/* Added by rjain -- added the xsrfToken at then end. Refer to JIRA documenation */ 
+		urlBuilder.append("&atl_token=");
+		urlBuilder.append(URLEncoder.encode("<webwork:property value='xsrfToken'/>", "UTF-8"));
+		
+		
 		// Open assembled JIRA URL
 		final URL jiraURL = new URL(urlBuilder.toString());
-		log.fine("Used JIRA URL is: "+jiraURL);
+		log.info("Used JIRA URL is: "+jiraURL);
 		
 		final URLConnection connection = jiraURL.openConnection();
+		/* Added by rjain -- added the Request Header to tell JIRA not to check Token. Refer to JIRA documenation */ 
+		connection.setRequestProperty("X-Atlassian-Token", "no-check");
+
 		if(connection instanceof HttpsURLConnection) {
 			((HttpsURLConnection)connection).setSSLSocketFactory(createSSLSocketFactory());
 			((HttpsURLConnection)connection).setHostnameVerifier(new EmptyHostnameVerifier());
@@ -187,13 +215,21 @@ public class CreateIssueActionPlugin implements Action {
 		
 		// Check response from JIRA to see if issue was created successfully
 		final String targetURL = connection.getURL().toString();
-		log.fine("Response URL from JIRA is: "+targetURL);
-		if (targetURL.contains("/browse/")) {
-			final String ticketNumber = targetURL.substring(targetURL.lastIndexOf('/') + 1);
+		log.info("Response URL from JIRA is: "+targetURL);
+		
+		/* Added by rjain -- the target URL can also contain HTML Chars hence the check */ 		
+		if (targetURL.contains("/browse/") || (targetURL.contains("%2Fbrowse%2F"))) {			
+			String ticketNumber = "Blank";
+			if (targetURL.contains("%2Fbrowse%2F")) {
+				ticketNumber = targetURL.substring(targetURL.lastIndexOf("%2F") + 3); 
+			}
+			else if (targetURL.contains("/browse/")) {
+				ticketNumber = targetURL.substring(targetURL.lastIndexOf('/') + 1);
+			}
 			log.info("Successfully created JIRA issue with the following number: "+ticketNumber);
 		}
 		else {
-			log.severe("Unknown problem while raising issue in JIRA");
+			log.severe("Unknown problem while raising issue in JIRA" + Status.StatusCode.ErrorInfrastructure);
 			return new Status(Status.StatusCode.ErrorInfrastructure);
 		}
 		return new Status(Status.StatusCode.Success);
@@ -244,12 +280,18 @@ public class CreateIssueActionPlugin implements Action {
 	
 	private static final String TD_NOWRAP_A_ID_VERSION = "<td nowrap><a id=\"version_";
 	
-	private static Map<String, String> getJIRAVersions(final String url, final String username,
+	private static Map<String, String> getJIRAVersions(final String url, final String jiraProjectId, final String jiraProjectName, final String username,
 			final String password) throws MalformedURLException,
 			IOException {
 		createSSLSocketFactory();
-		final URLConnection connection = new URL(url+"browse/JLT?report=com.atlassian.jira.plugin.system.project:versions-panel&subset=-1&os_username=" +
-				username + "&os_password=" + password).openConnection();
+		String versionURL = url.substring(0,url.lastIndexOf("secure")); 
+		
+		versionURL = versionURL+"browse/"+jiraProjectName+"?report=com.atlassian.jira.plugin.system.project:versions-panel&subset=-1&os_username=" +
+				username + "&os_password=" + password; 
+		
+		log.info("Used JIRA Version URL is: "+versionURL);
+		
+		final URLConnection connection = new URL(versionURL).openConnection();
 		if(connection instanceof HttpsURLConnection) {
 			((HttpsURLConnection)connection).setSSLSocketFactory(createSSLSocketFactory());
 			((HttpsURLConnection)connection).setHostnameVerifier(new EmptyHostnameVerifier());
@@ -259,7 +301,7 @@ public class CreateIssueActionPlugin implements Action {
 		try {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				final int index = line.indexOf(TD_NOWRAP_A_ID_VERSION);
+				final int index = line.indexOf(TD_NOWRAP_A_ID_VERSION+jiraProjectId);
 				if (index != -1) {
 					final String versionID = line.substring(index + TD_NOWRAP_A_ID_VERSION.length(), index +
 							TD_NOWRAP_A_ID_VERSION.length() + 5);
