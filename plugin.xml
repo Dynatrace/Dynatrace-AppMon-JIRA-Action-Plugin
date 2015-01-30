@@ -5,23 +5,17 @@
   <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin" name="JIRA - Create Issue Action Plugin">
     <information>
       <category value="" />
-      <description value="Action plugin to create a new issue in JIRA&#xD;&#xA;0.0.9: 20140619 --&gt; made it more english...&#xD;&#xA;0.0.8: 20140618 --&gt; Label (Stichwort) als Feld hinzugefügt&#xD;&#xA;0.0.7: Logging angepasst" />
+      <description value="Action plugin to create a new issue in JIRA&#xA;1.0.0 -&gt; streamlined (removed dependency on CURL and temporary file, removed unused parameters) &#xA;             uses the following JIRA client library : https://github.com/rcarz/jira-client&#xA;0.0.9: 20140619 --&gt; made it more english...&#xA;0.0.8: 20140618 --&gt; Label (Stichwort) als Feld hinzugefügt&#xA;0.0.7: Logging angepasst" />
       <supportlevel value="unsupported" />
     </information>
     <configuration>
-      <property key="jira_properties" label="Data" type="string" description="Name of the created data for curl" default="" multiline="false" />
-      <property key="jira_url" label="JIRA URL" type="string" description="The JIRA URL for creating a new issue" default="http://linzservvm.dynatrace.local:8080/jira" multiline="false" />
+      <property key="jira_url" label="JIRA URL" type="string" description="The JIRA URL for creating a new issue" default="https://server:8080/jira" multiline="false" />
       <property key="jira_username" label="JIRA Username" type="string" description="The JIRA username" default="" multiline="false" />
       <property key="jira_password" label="JIRA Password" type="password" description="The JIRA password" default="" />
-      <property key="jira_projectId" label="JIRA Project ID" type="string" description="The ID (not the name) of the JIRA project for the new issue" default="" multiline="false" />
-      <property key="jira_issueTypeId" label="JIRA Issue Type ID" type="string" description="The ID (not the name) of the JIRA issue type for the new issue" default="" multiline="false" />
-      <property key="jira_componentId" label="JIRA Component ID" type="string" description="The ID (not the name) of the JIRA component for the new issue" default="" multiline="false" />
-      <property key="jira_priorityId" label="JIRA Priority" type="string" description="The priority for the new issue" default="" multiline="false" />
-      <property key="jira_reporter" label="JIRA Reporter" type="string" description="The reporter for the new issue" default="" multiline="false" />
-      <property key="jira_assignee" label="JIRA Assignee" type="string" description="The assignee for the new issue (will be defaulted to the reporter if missing)" default="" multiline="false" />
-      <property key="jira_version" label="JIRA Version" type="string" description="The version for the new issue" default="" multiline="false" />
-      <property key="jira_projectName" label="JIRA Project Name" type="string" description="JIRA Project Name" default="FIT" multiline="false" />
-      <property key="jira_label" label="JIRA label" type="string" description="Commasepareted List of Label" default="dynatrace" multiline="false" />
+      <property key="jira_projectKey" label="JIRA Project Key" type="string" description="The Key of the JIRA project for the new issue" default="" multiline="false" />
+      <property key="jira_issueType" label="JIRA Issue Type" type="string" description="The Type of the JIRA issue for the new issue (ex: Bug, Task, ...)" default="Task" multiline="false" />
+      <property key="jira_assignee" label="JIRA assignee" type="string" description="Assignee (optional, but if provided, must be known to JIRA)" default="default" multiline="false" />
+      <property key="jira_reporter" label="JIRA Reporter" type="string" description="Reporter (optional, but if provided, must be known to JIRA)" default="default" multiline="false" />
     </configuration>
   </extension>
   <extension point="com.dynatrace.diagnostics.pdk.action" id="com.dynatrace.diagnostics.jira.CreateIssueActionPlugin.action" name="JIRA - Create Issue">
