@@ -7,5 +7,5 @@ This plugin is a showcase plugin to better understand how to build custom action
 A detailed [Step-By-Step Guide explains how to build a plugin like this](https://community.compuwareapm.com/community/display/DOCDT42/Developing+a+User+Plugin). The implementation of this plugin can easily be changed to create
 tickets in other ticketing systems such as Bugzilla, Trac, etc.
 
-Find further information in the [dynaTrace community](https://community.compuwareapm.com/community/display/DL/JIRA+Action+Plugin)
+Find further information in the [dynaTrace community](https://community.dynatrace.com/community/display/DL/JIRA+Action+Plugin)
 
